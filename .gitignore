@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Alvos de exemplo
+alvos.txt
+alvos2.txt
