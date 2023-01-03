@@ -1,6 +1,5 @@
 import PySimpleGUI as sg
 from time import sleep
-from PySimpleGUI.PySimpleGUI import Output
 import CensecRequest4 as CR
 import SignoRequest3 as SR
 
@@ -48,7 +47,7 @@ class TelaPython:
                     [sg.Text("Lista de CPFs ou CNPJs:")],
                     [sg.Multiline(size=(25,18), key = 'cpf_cnpj', expand_y = True, autoscroll = True), sg.Text(text = instrucoes)], 
                     [sg.Button('Iniciar Extração', key =  "Iniciar"), sg.Button('Pausar Extração', key = "Pause", visible = False), sg.Button('Parar Extração', key = 'Stop', visible = False, disabled = True)], 
-                    [sg.Output(size=(150,12), key= "Output")]
+                    [sg.Output(size=(150,12), expand_y = True, key= "Output")]
                     ]
 
 
@@ -56,8 +55,6 @@ class TelaPython:
         
     
     def Iniciar(self):
-        Output.expand_y = True
-        #self.janela.read()
         print ('Scraper Notarius')
         print ("Desenvolvido no Núcleo de Inovação, Prospecção e Análise de Dados (CGU-ES/NAE/NIPAD)")
         print ("Atualizações disponíveis em http://github.com/tgbremen/Notarius")
