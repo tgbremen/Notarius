@@ -67,8 +67,25 @@ class censec:
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_extension('web_pki.zip')
 
-        driver = webdriver.Chrome(ChromeDriverManager(path = dirname).install(), options=chromeOptions)
+        # driver = webdriver.Chrome(ChromeDriverManager(path = dirname).install(), options=chromeOptions) Esta linha está desabilitada devido ao problema de atualização.
+        # O código novo que contornou o problema segue abaixo:
+        
+        ###########################################################################################################
+        #import urllib.request
+        from selenium.webdriver.chrome.service import Service
+        service = Service(path = dirname)
+        
+        #try:
+        #    service = Service(ChromeDriverManager(path = dirname).install())
+        #except ValueError:
+        #    latest_chromedriver_version_url = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
+        #    latest_chromedriver_version = urllib.request.urlopen(latest_chromedriver_version_url).read().decode('utf-8')
+        #    service = Service(ChromeDriverManager(path = dirname, version = latest_chromedriver_version).install())
 
+        driver = webdriver.Chrome(service=service, options=chromeOptions) 
+        ###########################################################################################################
+        # fim do código novo
+        
         # Acessa o site
         driver.get(url)
         driver.implicitly_wait(10)  # in seconds
