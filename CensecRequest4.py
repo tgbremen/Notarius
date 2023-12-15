@@ -55,8 +55,22 @@ class censec_request:
         df_simplif = df[['nomePesquisado', 'cpfCnpjPesquisado', 'documentoPesquisado', 'tipoDocumentoPesquisado', 'nomeTipoDocumentoPesquisado', 'tipoAto', 'naturezaEscritura', 'outraNatureza', 'valorAto',  'dataAto', 'fonte', 'cartorioNome', 'cartorioMunicípio', 'cartorioUf', 'cartorioCns', 'livro', 'livroComplemento', 'folha', 'folhaComplemento', 'IdPesquisado', 'IdAto']]
         df_simplif = df_simplif.drop_duplicates()
         return df_simplif
+    
+    def grava_json_anx(self, arquivo, gerar_json = False, gerar_anx = False):
+        # Salva o JSON, caso necessário. 
+        if gerar_json:
+            import Excel2Macros as EM
+            nos, relacoes = EM.ler_planilha(arquivo)
+            arquivo_json = arquivo[:-4] + 'json'
+            EM.jm.grava_json(nos, relacoes, arquivo_json)
+            
+        if gerar_anx:
+            import Excel_to_IBM_i2 as EI2
+            texto_xml = EI2.ler_planilha(arquivo)
+            arquivo_anx = arquivo[:-4] + 'anx'
+            EI2.anx.grava_anx(arquivo_anx, texto_xml)
 
-    def start_scrap(self, alvos, arquivo=''):
+    def start_scrap(self, alvos, arquivo='', gerar_json=False, gerar_anx=False):
         alvo1 = [alvos[0]]  
         cookies = chc.cookies
         headers = chc.headers
@@ -216,11 +230,10 @@ class censec_request:
         # Grava o arquivo. 
         self.persiste(arquivo, df_final, 'Principal', True, df_final2, 'Simplificado')
         print ('Arquivo final salvo:', arquivo)
-        
+        self.grava_json_anx(arquivo, gerar_json, gerar_anx)
             
-
         
-    def scrap(self, lista_alvos, nome_lista = ''):
+    def scrap(self, lista_alvos, nome_lista, gerar_json, gerar_anx):
         scraper = censec_request()
         userprofile = os.environ['USERPROFILE']
         dirname = userprofile + r'\Downloads\Notarius'
@@ -232,7 +245,7 @@ class censec_request:
         start = datetime.datetime.now()
         global start2
         print (start)
-        scraper.start_scrap(lista_alvos, filename)                
+        scraper.start_scrap(lista_alvos, filename, gerar_json, gerar_anx)                
         stop = datetime.datetime.now()
         print(stop)
         print ('Tempo de execução: ', stop - start)

@@ -44,7 +44,7 @@ class signo_request():
     def salva_arquivo(self, pd_final, filename):
         # Cria campos que não existem no Signo e que existem no Censec
         pd_final['outraNatureza'] = ''
-        pd_final['numeroDocumentoParte'] = ''
+        #pd_final['numeroDocumentoParte'] = ''
         pd_final['fonte'] = 'SIGNO/CEP - Central de Escritura e Procuração'
         pd_final['uf'] = 'SP'
         
@@ -70,6 +70,8 @@ class signo_request():
         # Coloca data com separador de / ao invés de -
         df_final['dataAto'].replace('-', '/', regex = True, inplace = True)
         
+        # Coloca a data no formato DD/MM/AAAA
+        
         # Cria uma cópia simplificada dos dados, sem as partes
         df_final2 = df_final[['nomePesquisado', 'cpfCnpjPesquisado', 'documentoPesquisado', 'tipoDocumentoPesquisado', 'nomeTipoDocumentoPesquisado', 'tipoAto', 'naturezaEscritura', 'outraNatureza', 
                     'valorAto',  'dataAto', 'fonte', 'cartorioNome', 'cartorioMunicípio', 'cartorioUf', 'cartorioCns', 
@@ -80,9 +82,21 @@ class signo_request():
         self.persiste(filename, df_final, 'Principal', True, df_final2, 'Simplificado')
         print ('Arquivo salvo:', filename)
 
+    def grava_json_anx(self, arquivo, gerar_json = False, gerar_anx = False):
+        if gerar_json:
+            import Excel2Macros as EM
+            nos, relacoes = EM.ler_planilha(arquivo)
+            arquivo_json = arquivo[:-4] + 'json'
+            EM.jm.grava_json(nos, relacoes, arquivo_json)
+        
+        if gerar_anx:
+            import Excel_to_IBM_i2 as EI2
+            texto_xml = EI2.ler_planilha(arquivo)
+            arquivo_anx = arquivo[:-4] + 'anx'
+            EI2.anx.grava_anx(arquivo_anx, texto_xml)
         
     #Fazer a classe e a passagem de parâmetros
-    def start_scrap(self, alvos, nome_lista):
+    def start_scrap(self, alvos, nome_lista, gerar_json, gerar_anx):
         # Cria a pasta C:\users\usuário\Dowloads\Notarius se ela não existir. Armazena esse caminho. Cria a estrutura do nome do arquivo. 
         userprofile = os.environ['USERPROFILE']
         now = datetime.datetime.now()
@@ -105,6 +119,7 @@ class signo_request():
         url_detalhe_ato = r'https://backend.signo.org.br/api/ato/ato-cep/ato-detailed?idAto={0}'
 
         for num, alvo in enumerate(alvos):
+            alvo = ''.join(filter(str.isdigit, alvo))
             params['cpf'] = alvo
             # Executa a consulta para o cpf / nome
             print("Obtendo dados do {0}º CPF/CNPJ de um total de {1}. CPF/CNPJ: {2}".format(num+1, num_alvos, alvo))
@@ -154,7 +169,11 @@ class signo_request():
                 del json_detalhe_ato['partes']
                 for parte in partes:
                     parte['tipoDocumentoParte'] = parte['tipoDocumento']
+                    parte['identidadeParte'] = parte['documento']
+                    parte['numeroDocumentoParte'] = parte['cpf']
                     del parte['tipoDocumento']
+                    del parte['documento']
+                    del parte['cpf']
                     lista = {}
                     lista.update(ato)
                     lista.update(json_detalhe_ato)
@@ -182,12 +201,14 @@ class signo_request():
                     df = pd.DataFrame(columns = colunas)
                     df = pd.concat([df, l2])
                     self.salva_arquivo(df, filename)
+        
+        self.grava_json_anx(filename, gerar_json, gerar_anx)
                 
     
-    def scrap(self, lista_alvos, nome_lista = ''):
+    def scrap(self, lista_alvos, nome_lista = '', gerar_json = False, gerar_anx = False):
         start = datetime.datetime.now()
         print (start) 
-        self.start_scrap(lista_alvos, nome_lista)                 
+        self.start_scrap(lista_alvos, nome_lista, gerar_json, gerar_anx)                 
         stop = datetime.datetime.now()
         print(stop)
         print ('Tempo de execução: ', stop - start)
